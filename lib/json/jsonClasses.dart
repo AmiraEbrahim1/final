@@ -76,6 +76,7 @@ class OtpResend {
         "email": email,
       };
 }
+
 // reset password
 ResetPassword resetPasswordFromJson(String str) =>
     ResetPassword.fromJson(json.decode(str));
@@ -104,4 +105,54 @@ class ResetPassword {
         "code": code,
         "password": password,
       };
+}
+
+// serach-Userid
+GetUserId getUserIdFromJson(String str) => GetUserId.fromJson(json.decode(str));
+
+String getUserIdToJson(GetUserId data) => json.encode(data.toJson());
+
+class GetUserId {
+  GetUserId({
+    this.email,
+  });
+
+  String? email;
+
+  factory GetUserId.fromJson(Map<String, dynamic> json) => GetUserId(
+        email: json["email"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "email": email,
+      };
+
+}
+
+UpdatePassword updatePasswordFromJson(String str) => UpdatePassword.fromJson(json.decode(str));
+
+String updatePasswordToJson(UpdatePassword data) => json.encode(data.toJson());
+
+class UpdatePassword {
+    UpdatePassword({
+        this.userId,
+        this.otp,
+        this.password,
+    });
+
+    String ?userId;
+    String ?otp;
+    String ?password;
+
+    factory UpdatePassword.fromJson(Map<String, dynamic> json) => UpdatePassword(
+        userId: json["userId"],
+        otp: json["otp"],
+        password: json["password"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "userId": userId,
+        "otp": otp,
+        "password": password,
+    };
 }

@@ -1,29 +1,43 @@
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yisitapp/authScreens/signInPage.dart';
 
-class Logout extends StatelessWidget {
+class Logout extends StatefulWidget {
+  @override
+  State<Logout> createState() => _LogoutState();
+}
+
+class _LogoutState extends State<Logout> {
   Future<void> logouthere() async {
-    final response = await http
-        .get(Uri.parse('https://yisit-backend.herokuapp.com/logout-user'));
-    if (response.statusCode == 200) {
-      // var res = jsonDecode(response.body.toString());
-      // print(res);
-      print('Account logout successfully');
-    } else {
-      print("failed");
-    }
+    final response =
+        await http.get(Uri.parse('http://178.128.63.131:3001/logout-user'));
+    var res = jsonDecode(response.body.toString());
+    print(res);
+    //   print('Account logout successfully');
+    // if (response.statusCode == 200) {
+    //   // var res = jsonDecode(response.body.toString());
+    //   // print(res);
+    //   print('Account logout successfully');
+    // } else {
+    //   print("failed");
+    // }
+    Navigator.push(context, MaterialPageRoute(builder: (context) => SignIn()));
+    final pref = await SharedPreferences.getInstance();
+    pref.setBool("isLoggedIn", false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xff062537),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             child: Center(
               child: Text(
-                'done',
+                'click here for logout',
                 style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -37,6 +51,7 @@ class Logout extends StatelessWidget {
           ),
           //logout
           GestureDetector(
+            onTap: () => logouthere(),
             child: Container(
               height: 56,
               width: 311,

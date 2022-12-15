@@ -4,17 +4,16 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:yisitapp/authScreens/homepage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yisitapp/authScreens/signUp.dart';
-import 'package:yisitapp/hiveDatabse/hiveLoginDatabase.dart';
-import 'package:yisitapp/model/registerModel.dart';
 import 'package:yisitapp/service/client.dart';
 import 'package:yisitapp/view/homeScreen.dart';
-import 'package:yisitapp/view/shared.dart';
 import '../json/jsonClasses.dart';
 import 'forgotPassword.dart';
+import 'homepage.dart';
 
 class SignIn extends StatefulWidget {
+  static String id = "signInPage";
   @override
   State<SignIn> createState() => _SignInState();
 }
@@ -26,8 +25,19 @@ class _SignInState extends State<SignIn> {
   GlobalKey<FormState> _formkey = GlobalKey<FormState>();
   var data;
   var userEmail, userPassword;
-  RegisterModel?logModel;
+  bool isLoading = true;
+  var dataResponse;
+  var mobileResponse;
+  var passwordResponse;
   void login({String? email, String? password}) async {
+    isLoading
+        ? showDialog(
+            context: context,
+            builder: (context) => Center(
+              child: CircularProgressIndicator(),
+            ),
+          )
+        : Text("");
     try {
       if (_formkey.currentState!.validate()) {
         var _userSignin = LoginUser(
@@ -36,24 +46,20 @@ class _SignInState extends State<SignIn> {
         );
         var response = await AuthClient().postLogin('/login', _userSignin);
         print(response);
-        logModel = RegisterModel.fromJson(jsonDecode(response));
-       // HiveLoginBoxDB().box.clear();
-        HiveLoginBoxDB().addToHive(logModel!.data!);
-        print('login${logModel!.toJson()}');
         setState(() {
           data = response;
           var value = jsonDecode(response);
+          dataResponse = value;
           userEmail = value["data"]["user"]["email"];
           userPassword = value["data"]["user"]["password"];
           print("userEmail::: $userEmail");
           print("userpassword::: $userPassword");
-
         });
-//&&           userPassword == passwordController.text.trim()
 
-        await Future.delayed(Duration(seconds: 1));
         if (EmailValidator.validate(usernameController.text.trim())) {
           if (userEmail == usernameController.text.trim()) {
+            final prefs = await SharedPreferences.getInstance();
+            prefs.setBool("isLoggedIn", true);
             Navigator.pushAndRemoveUntil(
                 context,
                 PageTransition(
@@ -68,27 +74,64 @@ class _SignInState extends State<SignIn> {
           final text = "verify email and username again ";
           final snackBar = SnackBar(content: Text(text));
           ScaffoldMessenger.of(context).showSnackBar((snackBar));
-          // return "verify email";
         }
       }
     } catch (e) {
+      mobileResponse = dataResponse["mobile"];
+      passwordResponse = dataResponse["Message"];
+      showDialog(
+        context: context,
+        builder: (context) => Center(
+          child: AlertDialog(
+            backgroundColor: Color(0xff062537),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (mobileResponse != null)
+                  Text(
+                    "$mobileResponse",
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xffFFFFFF),
+                        fontFamily: "Google Sans"),
+                  ),
+                if (passwordResponse != null)
+                  Text(
+                    "$passwordResponse",
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xffFFFFFF),
+                        fontFamily: "Google Sans"),
+                  ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      isLoading = false;
+                      Navigator.pop(context);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => SignIn()),
+                        (route) => false,
+                      );
+                    });
+                  },
+                  child: Text("Ok"))
+            ],
+          ),
+        ),
+      );
       print(e.toString());
     }
   }
-@override
-  void initState() {
-    // TODO: implement initState
 
-    super.initState();
-  }
   @override
   Widget build(BuildContext context) {
-    // if(HiveLoginBoxDB().box.isNotEmpty){
-    //   Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>HomeScreen()));
-    // }
+    Size size = MediaQuery.of(context).size;
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Color(0xff062537),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: SingleChildScrollView(
@@ -98,22 +141,28 @@ class _SignInState extends State<SignIn> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    height: 55,
+                    // height: 55,
+                    height: size.height * 0.05,
                   ),
                   Center(
                     child: Container(
-                      height: 36.54,
-                      width: 71,
+                      // height: 36.54,
+                      // width: 71,
+                      height: size.height * 0.04,
+                      width: size.height * 0.08,
                       child: Image(
-                          image: AssetImage('images/yisit-coloured-logo.png')),
+                          image: AssetImage('assets/yisit-coloured-logo.png')),
                     ),
                   ),
                   SizedBox(
-                    height: 35.46,
+                    height: size.height * 0.043,
+                    // height: 35.46,
                   ),
                   Container(
-                    height: 26,
-                    width: 161,
+                    height: size.height * 0.034,
+                    width: size.height * 0.23,
+                    // height: 26,
+                    // width: 161,
                     // color: Colors.blue,
                     child: const Text(
                       "Welcome, Back",
@@ -125,7 +174,8 @@ class _SignInState extends State<SignIn> {
                     ),
                   ),
                   SizedBox(
-                    height: 50,
+                    height: size.height * 0.055,
+                    // height: 50,
                   ),
                   Column(
                     children: [
@@ -148,8 +198,10 @@ class _SignInState extends State<SignIn> {
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(right: 10.0),
                             child: Container(
-                              height: 20,
-                              width: 20,
+                              height: size.height * 0.020,
+                              width: size.width * 0.020,
+                              // height: 20,
+                              // width: 20,
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 4, horizontal: 2),
@@ -170,7 +222,8 @@ class _SignInState extends State<SignIn> {
                         ),
                       ),
                       SizedBox(
-                        height: 29,
+                        height: size.height * 0.031,
+                        // height: 29,
                       ),
                       // password
                       TextFormField(
@@ -178,8 +231,8 @@ class _SignInState extends State<SignIn> {
                         validator: (value) {
                           if (value!.isEmpty)
                             return "password cannot be empty";
-                          else if (value.length < 6)
-                            return "password must be atleast 6";
+                          else if (value.length < 8)
+                            return "password must be atleast 8";
                           // else if (value != (passwordController.text)) {
                           //   final text = "verify password ";
                           //   final snackBar = SnackBar(content: Text(text));
@@ -196,8 +249,10 @@ class _SignInState extends State<SignIn> {
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(right: 10.0),
                             child: Container(
-                              height: 20,
-                              width: 20,
+                              // height: 20,
+                              // width: 20,
+                              height: size.height * 0.020,
+                              width: size.width * 0.020,
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 4, horizontal: 2),
@@ -242,15 +297,15 @@ class _SignInState extends State<SignIn> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: InkWell(
-                      onTap: () => Navigator.push(
+                      onTap: () => Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => ForgotPassword(),
-                        ),
+                        ForgotPassword.id,
                       ),
                       child: Container(
-                        height: 18,
-                        width: 113,
+                        // height: 18,
+                        // width: 113,
+                        height: size.height * 0.021,
+                        width: size.width * 0.30,
                         child: const Text(
                           "Forgot Password?",
                           style: TextStyle(
@@ -264,24 +319,32 @@ class _SignInState extends State<SignIn> {
                     ),
                   ),
                   SizedBox(
-                    height: 28,
+                    // height: 28,
+                    height: size.height * 0.029,
                   ),
                   GestureDetector(
                     onTap: () {
-                      login(
-                        email: usernameController.text.toString(),
-                        password: passwordController.text.toString(),
-                      );
-                      navigateTo(context, HomeScreen());
+                      setState(() {
+                        if (_formkey.currentState!.validate()) {
+                          login(
+                            email: usernameController.text.toString(),
+                            password: passwordController.text.toString(),
+                          );
+                        }
+                      });
                     },
                     child: Center(
                       child: Container(
-                        height: 56,
-                        width: 311,
+                        // height: 56,
+                        // width: 311,
+                        height: size.height * 0.065,
+                        width: size.width * 0.81,
                         // color: Colors.red,
                         child: Container(
-                          height: 30,
-                          width: 311,
+                          // height: 30,
+                          // width: 311,
+                          height: size.height * 0.036,
+                          width: size.width * 0.81,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(96),
                             color: Color(0xff21C4A7),
@@ -301,8 +364,9 @@ class _SignInState extends State<SignIn> {
                       ),
                     ),
                   ),
-                  const SizedBox(
-                    height: 35,
+                  SizedBox(
+                    // height: 35,
+                    height: size.height * 0.045,
                   ),
                   // divider or
                   Row(
@@ -315,8 +379,10 @@ class _SignInState extends State<SignIn> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 6.36),
                         child: Container(
-                          height: 18,
-                          width: 15.91,
+                          // height: 18,
+                          // width: 15.91,
+                          height: size.height * 0.021,
+                          width: size.width * 0.036,
                           child: const Text(
                             "Or",
                             style: TextStyle(
@@ -336,18 +402,24 @@ class _SignInState extends State<SignIn> {
                     ],
                   ),
                   SizedBox(
-                    height: 19,
+                    // height: 19,
+                    height: size.height * 0.026,
                   ),
                   Center(
                     child: Container(
-                      height: 20,
-                      width: 228,
+                      // height: 20,
+                      // width: 228,
+                      // color: Colors.green,
+                      height: size.height * 0.031,
+                      width: size.width * 0.65,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            height: 20,
-                            width: 172,
+                            // height: 20,
+                            // width: 172,
+                            height: size.height * 0.025,
+                            width: size.width * 0.45,
                             // color: Colors.green,
                             child: const Text(
                               "Don’t have an account ?",
@@ -360,15 +432,15 @@ class _SignInState extends State<SignIn> {
                             ),
                           ),
                           InkWell(
-                            onTap: () => Navigator.push(
+                            onTap: () => Navigator.pushNamed(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => SignUpPage(),
-                              ),
+                              SignUpPage.id,
                             ),
                             child: Container(
-                              height: 20,
-                              width: 56,
+                              // height: 20,
+                              // width: 56,
+                              height: size.height * 0.028,
+                              width: size.width * 0.189,
                               child: const Text(
                                 "Sign up",
                                 style: TextStyle(
@@ -385,13 +457,17 @@ class _SignInState extends State<SignIn> {
                       ),
                     ),
                   ),
-                  const SizedBox(
-                    height: 120,
+                  SizedBox(
+                    // height: 120,
+                    height: size.height * 0.14,
                   ),
                   Center(
                     child: Container(
-                      height: 24,
-                      width: 89,
+                      // height: 24,
+                      // color: Colors.green,
+                      // width: 89,
+                      height: size.height * 0.035,
+                      width: size.width * 0.26,
                       child: const Center(
                         child: Text(
                           "Made with science by",
@@ -408,11 +484,14 @@ class _SignInState extends State<SignIn> {
                   ),
                   Center(
                     child: Container(
-                      height: 100,
-                      width: 100,
+                      // height: 100,
+                      // width: 100,
+                      height: size.height * 0.12,
+                      width: size.width * 0.30,
+                      // color: Colors.green,
                       child: Image(
                           image:
-                              AssetImage('images/STILr-App-asset-white.png')),
+                              AssetImage('assets/STILr-App-asset-white.png')),
                     ),
                   ),
                   // SizedBox(

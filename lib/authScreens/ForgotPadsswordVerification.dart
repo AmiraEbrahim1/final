@@ -3,31 +3,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:yisitapp/authScreens/homepage.dart';
-import 'package:yisitapp/json/jsonClasses.dart';
-import 'package:yisitapp/learning/sliderhome.dart';
+import 'package:yisitapp/authScreens/newPassword.dart';
 import 'package:yisitapp/service/client.dart';
 
-class VerificationCode extends StatefulWidget {
-  static String id = 'verification_code';
+import '../json/jsonClasses.dart';
+
+class ForgotVerificationCode extends StatefulWidget {
+  static String id = 'ForgotVerification_code';
 
   var uuid;
   var email;
-  VerificationCode({this.uuid, this.email}) {} //constructor
+  ForgotVerificationCode({this.uuid, this.email});
 
   @override
-  State<VerificationCode> createState() => _VerificationCodeState();
+  State<ForgotVerificationCode> createState() => _ForgotVerificationCodeState();
 }
 
-class _VerificationCodeState extends State<VerificationCode> {
+class _ForgotVerificationCodeState extends State<ForgotVerificationCode> {
   TextEditingController otp1 = TextEditingController();
   TextEditingController otp2 = TextEditingController();
   TextEditingController otp3 = TextEditingController();
   TextEditingController otp4 = TextEditingController();
   var recievedOtp = '';
-  var emailOtp;
   bool changeText = false;
-  var status = "";
+  var status = '';
   final _formkey = GlobalKey<FormState>();
   Future<void> verify({
     required String? userid,
@@ -40,24 +39,29 @@ class _VerificationCodeState extends State<VerificationCode> {
         print(recievedOtp);
         var response = await AuthClient().postVerifyUser('/verify-user', user);
         print(response);
-
-        var values = jsonDecode(response);
-
-        status = values["Status"];
-        print("here status is $status");
         await Future.delayed(Duration(seconds: 1));
-        if (status == "Verified") {
-          Navigator.pushAndRemoveUntil(
-            context,
-            PageTransition(
-              child: HomeScreen(),
-              type: PageTransitionType.fade,
-              isIos: true,
-              duration: Duration(milliseconds: 900),
-            ),
-            (route) => false,
-          );
-        }
+        setState(() {
+          var values = jsonDecode(response);
+          var status = values["Status"];
+          if (_formkey.currentState!.validate()) {
+            if (status == "Verified") {
+              // print(status == "Verified");
+              Navigator.pushAndRemoveUntil(
+                context,
+                PageTransition(
+                  child: NewPassword(
+                    uuid: widget.uuid,
+                    OtpCode: recievedOtp,
+                  ),
+                  type: PageTransitionType.fade,
+                  isIos: true,
+                  duration: Duration(milliseconds: 900),
+                ),
+                (route) => false,
+              );
+            }
+          }
+        });
       } else {
         setState(() {
           changeText = true;
@@ -110,6 +114,7 @@ class _VerificationCodeState extends State<VerificationCode> {
                   // color: Colors.green,
                   height: size.height * 0.040,
                   width: size.width * 0.67,
+
                   child: const Center(
                     child: Text(
                       "Verification Code",
@@ -226,6 +231,7 @@ class _VerificationCodeState extends State<VerificationCode> {
                   // width: 71,
                   height: size.height * 0.022,
                   width: size.width * 0.35,
+                  // color: Color(0xff21C4A7),
                   child: const Center(
                     child: Text(
                       "Resend OTP",

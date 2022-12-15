@@ -46,6 +46,8 @@ dependencies:
   flutter_expanded_tile: ^0.3.6
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  
+  
 
 
 
@@ -56,6 +58,8 @@ dependencies:
   http: ^0.13.5
   email_validator: ^2.1.17
   page_transition: ^2.0.9
+  shared_preferences: ^2.0.15
+  flutter_animated_dialog: ^2.0.1
 
 dev_dependencies:
   flutter_test:
@@ -84,6 +88,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - images/
+    - assets/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

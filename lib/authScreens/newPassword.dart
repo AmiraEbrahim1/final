@@ -1,15 +1,17 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:yisitapp/json/jsonClasses.dart';
+import 'package:yisitapp/learning/sliderhome.dart';
 import 'package:yisitapp/service/client.dart';
-
 
 import 'homepage.dart';
 
 class NewPassword extends StatefulWidget {
-
-  var email;
+  static String id = "Newpassword";
+  var uuid;
   var OtpCode;
-  NewPassword({this.email, this.OtpCode});
+
+  NewPassword({this.uuid, this.OtpCode});
 
   @override
   State<NewPassword> createState() => _NewPasswordState();
@@ -19,36 +21,42 @@ class _NewPasswordState extends State<NewPassword> {
   TextEditingController newpasswordcontroller = TextEditingController();
   TextEditingController conformnewpasswordcontroller = TextEditingController();
   final _formkey = GlobalKey<FormState>();
+  bool _secureTextpass1 = true;
+  bool _secureTextpass2 = true;
+  Future<void> conformNewPassword(String updatedPassword) async {
+    var userId = widget.uuid;
+    var otp = widget.OtpCode;
 
-  Future<void> conformNewPassword() async {
+    // showDialog(
+    //   context: context,
+    //   builder: (context) => Center(
+    //     child: CircularProgressIndicator(),
+    //   ),
+    // );
     try {
-      var pass = ResetPassword(
-        email: widget.email,
-        code: widget.OtpCode,
-        password: newpasswordcontroller.text.trim(),
+      var resetPass = UpdatePassword(
+        userId: userId,
+        otp: otp,
+        password: updatedPassword,
       );
       var response =
-          await AuthClient().postResetPassword('/reset-password', pass);
-      print(response); // check response
+          await AuthClient().postUpdatePassword('/update-password', resetPass);
+      print(response);
       if (_formkey.currentState!.validate()) {
         //put validation on matching something it will navigate to next screen......
         Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(),
-          ),
-        );
+            context, MaterialPageRoute(builder: (context) => HomeScreen()));
       }
     } catch (e) {
       print(e.toString());
     }
+    // navigatorKey.currentState!.popUntil((route) => route.isFirst);
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Color(0xff062537),
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.only(left: 20),
@@ -79,6 +87,7 @@ class _NewPasswordState extends State<NewPassword> {
                   ),
                   TextFormField(
                     style: TextStyle(color: Colors.white),
+                    obscureText: _secureTextpass1,
                     controller: newpasswordcontroller,
                     keyboardType: TextInputType.visiblePassword,
                     validator: (value) {
@@ -90,6 +99,21 @@ class _NewPasswordState extends State<NewPassword> {
                         return null;
                     },
                     decoration: InputDecoration(
+                      suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _secureTextpass1 = !_secureTextpass1;
+                            });
+                          },
+                          icon: _secureTextpass1
+                              ? Icon(
+                                  CupertinoIcons.eye_slash_fill,
+                                  color: Color(0xffFFFFFF),
+                                )
+                              : Icon(
+                                  CupertinoIcons.eye_fill,
+                                  color: Color(0xffFFFFFF),
+                                )),
                       prefixIcon: Container(
                         height: 20,
                         width: 20,
@@ -116,6 +140,7 @@ class _NewPasswordState extends State<NewPassword> {
                   TextFormField(
                     style: TextStyle(color: Colors.white),
                     controller: conformnewpasswordcontroller,
+                    keyboardType: TextInputType.visiblePassword,
                     validator: (value) {
                       if (value!.isEmpty)
                         return "field cannot be empty";
@@ -126,7 +151,24 @@ class _NewPasswordState extends State<NewPassword> {
                       else
                         return null;
                     },
+                    obscureText: _secureTextpass2,
                     decoration: InputDecoration(
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _secureTextpass2 = !_secureTextpass2;
+                          });
+                        },
+                        icon: _secureTextpass2
+                            ? const Icon(
+                                CupertinoIcons.eye_slash_fill,
+                                color: Color(0xffFFFFFF),
+                              )
+                            : const Icon(
+                                CupertinoIcons.eye_fill,
+                                color: Color(0xffFFFFFF),
+                              ),
+                      ),
                       prefixIcon: Container(
                         height: 20,
                         width: 20,
@@ -152,7 +194,12 @@ class _NewPasswordState extends State<NewPassword> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      conformNewPassword();
+                      setState(() {
+                        if (_formkey.currentState!.validate()) {
+                          conformNewPassword(newpasswordcontroller.text.trim());
+                        }
+                      });
+
                       // Navigator.pushNamed(context, VerificationCode.id);
                     },
                     child: Center(

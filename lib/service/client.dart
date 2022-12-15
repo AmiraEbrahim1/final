@@ -5,20 +5,18 @@ import '../json/jsonClasses.dart';
 
 class AuthClient {
   var client = http.Client();
-  // var baseUrl = 'https://yisit-backend.herokuapp.com';
   var baseUrl = 'http://178.128.63.131:3001';
 
   //post for register
   Future<dynamic> postRegister(String api, dynamic object) async {
     var url = Uri.parse(baseUrl + api);
     var _data = json.encode(object);
-    // var messageEmail;
 
     var _header = {
       'Content-Type': 'application/json',
     };
     var response = await client.post(url, body: _data, headers: _header);
-    print(response.body);
+    // print(response.body);
     // var hey = jsonDecode(response.body);
     // print("helllo hiii $hey");
     // messageEmail = hey["Message"]["email"];
@@ -57,7 +55,7 @@ class AuthClient {
       'Content-Type': 'application/json',
     };
     var response = await client.post(url, body: _data, headers: _header);
-    // print("verify is working working");
+
     return response.body;
   }
 
@@ -72,8 +70,19 @@ class AuthClient {
     return response.body;
   }
 
-  // reset password
-  Future<dynamic> postResetPassword(String api, dynamic object) async {
+  // update password
+  Future<dynamic> postUpdatePassword(String api, dynamic object) async {
+    var url = Uri.parse(baseUrl + api);
+    var _data = json.encode(object);
+    var _header = {
+      'Content-Type': 'application/json',
+    };
+    var response = await client.post(url, body: _data, headers: _header);
+    return response.body;
+  }
+
+  //serach user
+  Future<dynamic> postSearchUser(String api, dynamic object) async {
     var url = Uri.parse(baseUrl + api);
     var _data = json.encode(object);
     var _header = {

@@ -4,14 +4,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yisitapp/authScreens/signInPage.dart';
+import 'package:yisitapp/authScreens/signUp.dart';
+import 'package:yisitapp/main.dart';
 import 'package:yisitapp/service/client.dart';
-
 import '../json/registerJson.dart';
-
 import 'verificationCode.dart';
 
 class SignUpPage2 extends StatefulWidget {
+  static String id = "SignupPage2";
   static var userid;
   TextEditingController? parentName;
   TextEditingController? studentname;
@@ -26,6 +28,7 @@ class _SignUpPage2State extends State<SignUpPage2> {
   @override
   var userDataid;
   var messageEmail;
+  var mobileRegisterd;
   TextEditingController passwordcontroller = TextEditingController();
   TextEditingController conformpasswordcontroller = TextEditingController();
   TextEditingController parentEmailController = TextEditingController();
@@ -48,6 +51,8 @@ class _SignUpPage2State extends State<SignUpPage2> {
   bool _secureTextpass1 = true;
   bool _secureTextpass2 = true;
   bool _checkBox = false;
+  var responseData;
+  bool isLoading = true;
 
   Future<void> register({
     required String? parent_name,
@@ -56,6 +61,19 @@ class _SignUpPage2State extends State<SignUpPage2> {
     required String? mobile,
     required String password,
   }) async {
+    if (_checkBox == true) {
+      setState(() {
+        isLoading
+            ? showDialog(
+                context: context,
+                builder: (context) => Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            : Text("");
+      });
+    }
+
     try {
       var user = User(
         parentName: parent_name,
@@ -70,61 +88,118 @@ class _SignUpPage2State extends State<SignUpPage2> {
       // print("parentemail = $parentemail");
       // print("mobile=$mobile");
       // print("password=$password");
+      if (_checkBox != true) {
+        final text = "Click on checkbox to continue";
+        final snackBar = SnackBar(
+          content: Text(text),
+          backgroundColor: Colors.red,
+        );
+        ScaffoldMessenger.of(context).showSnackBar((snackBar));
+      }
       if (_checkBox) {
         var response = await AuthClient().postRegister('/register', user);
+        print(response);
+        setState(() {
+          var values = jsonDecode(response);
+          print(values);
+          responseData = values;
+          userDataid = values["data"]["userId"];
+          print(userDataid);
+        });
+        // Navigator.pushNamed(context, VerificationCode.id);
 
-        setState(
-          () {
-            var values = jsonDecode(response);
-            print(values);
-            userDataid = values["data"]["userId"];
-            print(userDataid);
-            //
-            messageEmail = values["Message"]["email"];
-            print(messageEmail);
-            //
-            if (userDataid == null) {
-              final text = "$messageEmail";
-              final snackBar = SnackBar(content: Text(text));
-              ScaffoldMessenger.of(context).showSnackBar((snackBar));
-            }
+        // print(messageEmail);
+        // //
+        // if (userDataid == null) {
+        //   final text = "$messageEmail";
+        //   final snackBar = SnackBar(content: Text(text));
+        //   ScaffoldMessenger.of(context).showSnackBar((snackBar));
+        // }
+        // SignUpPage2.userid = userDataid; // done this for forgotten password
+        // final text = "register done";
+        // final snackBar = SnackBar(content: Text(text));
+        // ScaffoldMessenger.of(context).showSnackBar((snackBar));
 
-            SignUpPage2.userid = userDataid; // done this for forgotten password
-            // final text = "register done";
-            // final snackBar = SnackBar(content: Text(text));
-            // ScaffoldMessenger.of(context).showSnackBar((snackBar));
-
-            if ((EmailValidator.validate(parentEmailController.text)) &&
-                _checkBox == true) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                PageTransition(
-                  child: VerificationCode(
-                    uuid: userDataid,
-                    email: parentEmailController.text.toString(),
-                  ),
-                  type: PageTransitionType.fade,
-                  isIos: true,
-                  duration: Duration(milliseconds: 900),
-                ),
-                (route) => false,
-              );
-            }
-          },
-        );
+        if ((EmailValidator.validate(parentEmailController.text.trim())) &&
+            _checkBox == true) {
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setBool("isLoggedIn", true);
+          Navigator.pushAndRemoveUntil(
+            context,
+            PageTransition(
+              child: VerificationCode(
+                uuid: userDataid,
+                email: parentEmailController.text.trim().toString(),
+              ),
+              type: PageTransitionType.fade,
+              isIos: true,
+              duration: Duration(milliseconds: 900),
+            ),
+            (route) => false,
+          ).then((value) => setState(() {
+                isLoading = false;
+              }));
+        }
       }
     } catch (e) {
+      messageEmail = responseData["Message"]["email"];
+      mobileRegisterd = responseData["Message"]["username"];
+      showDialog(
+        context: context,
+        builder: (context) => Center(
+          child: AlertDialog(
+            backgroundColor: Color(0xff062537),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (messageEmail != null)
+                  Text(
+                    "$messageEmail",
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xffFFFFFF),
+                        fontFamily: "Google Sans"),
+                  ),
+                if (mobileRegisterd != null)
+                  Text(
+                    "$mobileRegisterd",
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xffFFFFFF),
+                        fontFamily: "Google Sans"),
+                  ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      isLoading = false;
+                      Navigator.pop(context);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => SignUpPage()),
+                        (route) => false,
+                      );
+                    });
+                  },
+                  child: Text("Ok"))
+            ],
+          ),
+        ),
+      );
       print(e.toString());
     }
+    navigatorKey.currentState!.popUntil((route) => route.isActive);
   }
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Color(0xff062537),
         body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 20),
           child: SingleChildScrollView(
             child: Form(
               key: _formkey,
@@ -132,22 +207,29 @@ class _SignUpPage2State extends State<SignUpPage2> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    height: 20,
+                    // height: 20,
+                    height: size.height * 0.02,
                   ),
                   Center(
                     child: Container(
-                      height: 36.54,
-                      width: 71,
+                      // height: 36.54,
+                      // width: 71,
+                      height: size.height * 0.04,
+                      width: size.height * 0.08,
                       child: Image(
-                          image: AssetImage('images/yisit-coloured-logo.png')),
+                          image: AssetImage('assets/yisit-coloured-logo.png')),
                     ),
                   ),
                   SizedBox(
-                    height: 35.46,
+                    // height: 35.46,
+                    height: size.height * 0.043,
                   ),
                   Container(
-                    height: 26,
-                    width: 80,
+                    // height: 26,
+                    // width: 80,
+                    height: size.height * 0.035,
+                    width: size.height * 0.23,
+                    // color: Colors.red,
                     child: const Text(
                       "Sign Up",
                       style: TextStyle(
@@ -159,11 +241,14 @@ class _SignUpPage2State extends State<SignUpPage2> {
                     ),
                   ),
                   SizedBox(
-                    height: 16,
+                    // height: 16,
+                    height: size.height * 0.019,
                   ),
                   Container(
-                    height: 20,
-                    width: 194,
+                    // height: 20,
+                    // width: 194,
+                    height: size.height * 0.032,
+                    width: size.height * 0.31,
                     // color: Colors.blue,
                     child: const Text(
                       "Get started by creating account.",
@@ -175,7 +260,8 @@ class _SignUpPage2State extends State<SignUpPage2> {
                     ),
                   ),
                   SizedBox(
-                    height: 34,
+                    // height: 34,
+                    height: size.height * 0.038,
                   ),
                   Column(
                     children: [
@@ -204,8 +290,10 @@ class _SignUpPage2State extends State<SignUpPage2> {
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: Container(
-                              height: 20,
-                              width: 20,
+                              // height: 20,
+                              // width: 20,
+                              height: size.height * 0.020,
+                              width: size.width * 0.020,
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 3, horizontal: 3),
@@ -227,7 +315,8 @@ class _SignUpPage2State extends State<SignUpPage2> {
                       ),
 
                       SizedBox(
-                        height: 30,
+                        // height: 30,
+                        height: size.height * 0.033,
                       ),
                       //  Enter Password
                       TextFormField(
@@ -247,8 +336,10 @@ class _SignUpPage2State extends State<SignUpPage2> {
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(right: 10.0),
                             child: Container(
-                              height: 20,
-                              width: 20,
+                              // height: 20,
+                              // width: 20,
+                              height: size.height * 0.020,
+                              width: size.width * 0.020,
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 4, horizontal: 2),
@@ -284,7 +375,8 @@ class _SignUpPage2State extends State<SignUpPage2> {
                         ),
                       ),
                       SizedBox(
-                        height: 30,
+                        // height: 30,
+                        height: size.height * 0.035,
                       ),
                       // Conform password
                       TextFormField(
@@ -305,8 +397,10 @@ class _SignUpPage2State extends State<SignUpPage2> {
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(right: 10.0),
                             child: Container(
-                              height: 20,
-                              width: 20,
+                              // height: 20,
+                              // width: 20,
+                              height: size.height * 0.020,
+                              width: size.width * 0.020,
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 4, horizontal: 2),
@@ -344,12 +438,16 @@ class _SignUpPage2State extends State<SignUpPage2> {
                     ],
                   ),
                   SizedBox(
-                    height: 25,
+                    // height: 25,
+                    height: size.height * 0.030,
                   ),
                   Center(
                     child: Container(
-                      height: 40,
-                      width: 326,
+                      // color: Colors.red,
+                      // height: 40,
+                      // width: 326,
+                      height: size.height * 0.052,
+                      width: size.width * 0.85,
                       child: Row(
                         children: [
                           GestureDetector(
@@ -363,6 +461,8 @@ class _SignUpPage2State extends State<SignUpPage2> {
                               color: Colors.black,
                               height: 24,
                               width: 24,
+                              // height: size.height * 0.024,
+                              // width: size.width * 0.026,
                               child: _checkBox
                                   ? Icon(
                                       Icons.check,
@@ -375,12 +475,15 @@ class _SignUpPage2State extends State<SignUpPage2> {
                             ),
                           ),
                           SizedBox(
-                            width: 8,
+                            // width: 8,
+                            width: size.width * 0.02,
                           ),
                           Container(
                             // color: Colors.red,
-                            height: 40,
-                            width: 290,
+                            // height: 40,
+                            // width: 290,
+                            height: size.height * 0.045,
+                            width: size.width * 0.76,
                             child: Center(
                               child: Text.rich(TextSpan(
                                 text:
@@ -424,7 +527,8 @@ class _SignUpPage2State extends State<SignUpPage2> {
                     ),
                   ),
                   SizedBox(
-                    height: 25,
+                    // height: 25,
+                    height: size.height * 0.030,
                   ),
                   // signUp
                   GestureDetector(
@@ -437,8 +541,10 @@ class _SignUpPage2State extends State<SignUpPage2> {
                     },
                     child: Center(
                       child: Container(
-                        height: 56,
-                        width: 311,
+                        // height: 56,
+                        // width: 311,
+                        height: size.height * 0.069,
+                        width: size.width * 0.81,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(96),
                           color: Color(0xff21C4A7),
@@ -465,13 +571,17 @@ class _SignUpPage2State extends State<SignUpPage2> {
                     ),
                   ),
                   SizedBox(
-                    height: 25,
+                    // height: 25,
+                    height: size.height * 0.030,
                   ),
                   //Already have an account ?
                   Center(
                     child: Container(
-                      height: 20,
-                      width: 242,
+                      // height: 20,
+                      // width: 242,
+                      // color: Colors.green,
+                      height: size.height * 0.037,
+                      width: size.width * 0.65,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -485,15 +595,15 @@ class _SignUpPage2State extends State<SignUpPage2> {
                             ),
                           ),
                           InkWell(
-                            onTap: () => Navigator.push(
+                            onTap: () => Navigator.pushNamed(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => SignIn(),
-                              ),
+                              SignIn.id,
                             ),
                             child: Container(
-                              height: 20,
-                              width: 50,
+                              // height: 20,
+                              // width: 50,
+                              height: size.height * 0.025,
+                              width: size.width * 0.163,
                               child: const Text(
                                 "Sign in",
                                 style: TextStyle(
@@ -511,12 +621,15 @@ class _SignUpPage2State extends State<SignUpPage2> {
                     ),
                   ),
                   SizedBox(
-                    height: 80,
+                    // height: 80,
+                    height: size.height * 0.080,
                   ),
                   Center(
                     child: Container(
-                      height: 24,
-                      width: 89,
+                      // height: 24,
+                      // width: 89,
+                      height: size.height * 0.035,
+                      width: size.width * 0.26,
                       child: const Center(
                         child: Text(
                           "Made with science by",
@@ -534,11 +647,13 @@ class _SignUpPage2State extends State<SignUpPage2> {
 
                   Center(
                     child: Container(
-                      height: 100,
-                      width: 100,
+                      // height: 100,
+                      // width: 100,
+                      height: size.height * 0.12,
+                      width: size.width * 0.30,
                       child: Image(
                           image:
-                              AssetImage('images/STILr-App-asset-white.png')),
+                              AssetImage('assets/STILr-App-asset-white.png')),
                     ),
                   ),
                   // SizedBox(

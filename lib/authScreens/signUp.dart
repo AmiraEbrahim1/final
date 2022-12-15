@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:yisitapp/authScreens/signUp2.dart';
 class SignUpPage extends StatefulWidget {
+  static String id = "signUpPage";
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -27,14 +28,25 @@ class _SignUpPageState extends State<SignUpPage> {
           duration: Duration(milliseconds: 900),
         ),
       );
+
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => SignUpPage2(
+      //       parentName: parentNameController,
+      //       studentname: studentNameController,
+      //       phoneNo: phoneNumberController,
+      //     ),
+      //   ),
+      // );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Color(0xff062537),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: SingleChildScrollView(
@@ -44,22 +56,29 @@ class _SignUpPageState extends State<SignUpPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    height: 55,
+                    // height: 55,
+                    height: size.height * 0.05,
                   ),
                   Center(
                     child: Container(
-                      height: 36.54,
-                      width: 71,
+                      // height: 36.54,
+                      // width: 71,
+                      height: size.height * 0.04,
+                      width: size.height * 0.08,
                       child: Image(
-                          image: AssetImage('images/yisit-coloured-logo.png')),
+                          image: AssetImage('assets/yisit-coloured-logo.png')),
                     ),
                   ),
                   SizedBox(
-                    height: 35.46,
+                    // height: 35.46,
+                    height: size.height * 0.043,
                   ),
                   Container(
-                    height: 26,
-                    width: 80,
+                    // height: 26,
+                    // width: 80,
+                    height: size.height * 0.036,
+                    width: size.height * 0.80,
+                    // color: Colors.red,
                     child: const Text(
                       "Sign Up",
                       style: TextStyle(
@@ -71,11 +90,14 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                   SizedBox(
-                    height: 16,
+                    // height: 16,
+                    height: size.height * 0.018,
                   ),
                   Container(
-                    height: 20,
-                    width: 194,
+                    // height: 20,
+                    // width: 194,
+                    height: size.height * 0.024,
+                    width: size.height * 0.25,
                     // color: Colors.red,
                     child: const Text(
                       "Get started by creating account.",
@@ -87,7 +109,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                   SizedBox(
-                    height: 34,
+                    // height: 34,
+                    height: size.height * 0.038,
                   ),
                   Column(
                     children: [
@@ -105,8 +128,10 @@ class _SignUpPageState extends State<SignUpPage> {
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: Container(
-                              height: 20,
-                              width: 20,
+                              // height: 20,
+                              // width: 20,
+                              height: size.height * 0.020,
+                              width: size.width * 0.020,
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 3, horizontal: 3),
@@ -127,7 +152,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                       ),
                       SizedBox(
-                        height: 30,
+                        // height: 30,
+                        height: size.height * 0.035,
                       ),
                       //Student Name
                       TextFormField(
@@ -148,8 +174,10 @@ class _SignUpPageState extends State<SignUpPage> {
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: Container(
-                              height: 20,
-                              width: 20,
+                              // height: 20,
+                              // width: 20,
+                              height: size.height * 0.020,
+                              width: size.width * 0.020,
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 3, horizontal: 3),
@@ -170,7 +198,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                       ),
                       SizedBox(
-                        height: 30,
+                        // height: 30,
+                        height: size.height * 0.035,
                       ),
                       // phone number
                       TextFormField(
@@ -189,8 +218,10 @@ class _SignUpPageState extends State<SignUpPage> {
                           prefixIcon: Padding(
                             padding: const EdgeInsets.only(right: 8.0),
                             child: Container(
-                              height: 20,
-                              width: 20,
+                              // height: 20,
+                              // width: 20,
+                              height: size.height * 0.020,
+                              width: size.width * 0.020,
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 3, horizontal: 3),
@@ -213,13 +244,16 @@ class _SignUpPageState extends State<SignUpPage> {
                     ],
                   ),
                   SizedBox(
-                    height: 28,
+                    // height: 28,
+                    height: size.height * 0.032,
                   ),
                   // next
                   Center(
                     child: Container(
-                      height: 56,
-                      width: 311,
+                      // height: 56,
+                      // width: 311,
+                      height: size.height * 0.065,
+                      width: size.width * 0.81,
                       child: GestureDetector(
                         onTap: () {
                           nextSignUpPage();
@@ -231,8 +265,10 @@ class _SignUpPageState extends State<SignUpPage> {
                           ),
                           child: Center(
                             child: Container(
-                              height: 30,
-                              width: 311,
+                              // height: 30,
+                              // width: 311,
+                              height: size.height * 0.030,
+                              width: size.width * 0.81,
                               child: const Center(
                                 child: Text(
                                   'Next',
@@ -251,12 +287,15 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                   SizedBox(
-                    height: 100,
+                    // height: 100,
+                    height: size.height * 0.150,
                   ),
                   Center(
                     child: Container(
-                      height: 24,
-                      width: 89,
+                      // height: 24,
+                      // width: 89,
+                      height: size.height * 0.035,
+                      width: size.width * 0.26,
                       child: const Center(
                         child: Text(
                           "Made with science by",
@@ -274,11 +313,13 @@ class _SignUpPageState extends State<SignUpPage> {
 
                   Center(
                     child: Container(
-                      height: 100,
-                      width: 100,
+                      // height: 100,
+                      // width: 100,
+                      height: size.height * 0.12,
+                      width: size.width * 0.30,
                       child: Image(
                           image:
-                              AssetImage('images/STILr-App-asset-white.png')),
+                              AssetImage('assets/STILr-App-asset-white.png')),
                     ),
                   ),
                   // SizedBox(

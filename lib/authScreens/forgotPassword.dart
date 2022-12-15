@@ -1,12 +1,14 @@
+import 'dart:convert';
+
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:yisitapp/json/jsonClasses.dart';
-import 'package:yisitapp/service/client.dart';
+import '../service/client.dart';
 import 'verificationCode.dart';
+import 'ForgotPadsswordVerification.dart';
 
 class ForgotPassword extends StatefulWidget {
- 
-  // var uuid = SignUpPage2.userid;
+  static String id = "forgotPassword";
 
   @override
   State<ForgotPassword> createState() => _ForgotPasswordState();
@@ -15,35 +17,63 @@ class ForgotPassword extends StatefulWidget {
 class _ForgotPasswordState extends State<ForgotPassword> {
   TextEditingController emailController = TextEditingController();
   GlobalKey<FormState> _formkey = GlobalKey<FormState>();
-  var data;
-  void resendOtp({String? email}) async {
-    // just put here the email and userid
+  var uuid;
+  getOtpFromEmail({String? email}) async {
+    try {
+      var _searchUuid = GetUserId(
+        email: email,
+      );
+      var uuidResponse =
+          await AuthClient().postSearchUser('/forgot-password', _searchUuid);
+      print(uuidResponse);
+      setState(() {
+        var values = jsonDecode(uuidResponse);
+        uuid = values["data"]["userId"];
+        print(uuid);
+        // send uuid on resendotp
+        resendOtp(
+          email: emailController.text.toString(),
+          uuid: uuid,
+        );
+      });
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  void resendOtp({String? email, String? uuid}) async {
     try {
       var _otpResend = OtpResend(
         email: email,
-        userId: "",
+        userId: uuid,
       );
-      //here xheck the endpoint
       var response =
           await AuthClient().postResendCode('/resend-otp', _otpResend);
-      print(response);
+      print(" hello $response");
       setState(() {
-        data = response;
-      });
+        var value = jsonDecode(response);
+        var message = value["message"];
+        var responseEmail = value["data"]["email"];
+        print(message);
+        if (_formkey.currentState!.validate()) {
+          //   // await Future.delayed(Duration(seconds: 1));
+          if (EmailValidator.validate(emailController.text.trim())) {
+            if (message == "Verfication OTP sent") {
+              // print(message == "Verfication OTP sent");
 
-      if (_formkey.currentState!.validate()) {
-        await Future.delayed(Duration(seconds: 1));
-        if (EmailValidator.validate(emailController.text.trim())) {
-          if (response.email == emailController.text.trim()) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => VerificationCode(),
-              ),
-            );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ForgotVerificationCode(
+                    uuid: uuid,
+                    email: responseEmail,
+                  ),
+                ),
+              );
+            }
           }
         }
-      }
+      });
     } catch (e) {
       print(e.toString());
     }
@@ -51,9 +81,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Color(0xff062537),
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.only(left: 20),
@@ -64,11 +94,15 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    height: 135,
+                    // height: 135,
+                    height: size.height * 0.158,
                   ),
                   Container(
-                    height: 28,
-                    width: 189,
+                    // height: 28,
+                    // width: 189,
+                    // color: Colors.blue,
+                    height: size.height * 0.039,
+                    width: size.height * 0.23,
                     child: const Text(
                       "Forgot Password?",
                       textAlign: TextAlign.center,
@@ -83,8 +117,11 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     height: 17,
                   ),
                   Container(
-                    height: 30,
-                    width: 342,
+                    // height: 30,
+                    // width: 342,
+                    // color: Colors.blue,
+                    height: size.height * 0.048,
+                    width: size.height * 0.40,
                     child: const Center(
                       child: Text(
                         "Don’t worry it happens, Please enter the mail id associated with your account.",
@@ -97,7 +134,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     ),
                   ),
                   SizedBox(
-                    height: 32,
+                    // height: 32,
+                    height: size.height * 0.038,
                   ),
                   TextFormField(
                     controller: emailController,
@@ -116,8 +154,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     },
                     decoration: InputDecoration(
                       prefixIcon: Container(
-                        height: 20,
-                        width: 20,
+                        // height: 20,
+                        // width: 20,
+                        height: size.height * 0.020,
+                        width: size.width * 0.020,
                         child: const Padding(
                           padding: EdgeInsets.all(4),
                           child: Icon(
@@ -136,18 +176,19 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     ),
                   ),
                   SizedBox(
-                    height: 32,
+                    // height: 32,
+                    height: size.height * 0.038,
                   ),
                   GestureDetector(
                     onTap: () {
-                      resendOtp(
-                        email: emailController.text.toString(),
-                      );
+                      getOtpFromEmail(email: emailController.text.trim());
                     },
                     child: Center(
                       child: Container(
-                        height: 56,
-                        width: 311,
+                        // height: 56,
+                        // width: 311,
+                        height: size.height * 0.065,
+                        width: size.width * 0.81,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(96),
                           color: Color(0xff21C4A7),
@@ -155,8 +196,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         child: Center(
                           child: Container(
                             // color: Colors.red,
-                            height: 30,
-                            width: 311,
+                            // height: 30,
+                            // width: 311,
+                            height: size.height * 0.036,
+                            width: size.width * 0.81,
                             child: const Center(
                               child: Text(
                                 'Send OTP',
